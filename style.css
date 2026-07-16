@@ -1,0 +1,542 @@
+/* ═══════════════════════════════════════════════════════════════
+   Truth Table App — Style
+   Shares design tokens with the prop/QL formula checkers
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Reset ───────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+
+/* ── Fonts ───────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'et-book';
+  src: url('https://gabriel-uzquiano.github.io/logic/libs/tufte-css-2015.12.29/et-book/et-book-roman-line-figures/et-book-roman-line-figures.woff') format('woff');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: 'et-book';
+  src: url('https://gabriel-uzquiano.github.io/logic/libs/tufte-css-2015.12.29/et-book/et-book-bold-line-figures/et-book-bold-line-figures.woff') format('woff');
+  font-weight: bold; font-style: normal;
+}
+@font-face {
+  font-family: 'et-book';
+  src: url('https://gabriel-uzquiano.github.io/logic/libs/tufte-css-2015.12.29/et-book/et-book-roman-old-style-figures/et-book-roman-old-style-figures.woff') format('woff');
+  font-weight: normal; font-style: italic;
+}
+
+/* ── Design Tokens ───────────────────────────────────────────── */
+:root {
+  --font-body: 'et-book','Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;
+  --font-mono: 'Consolas','Liberation Mono',Menlo,Courier,monospace;
+  --font-sans: 'Gill Sans','Gill Sans MT',Calibri,sans-serif;
+
+  --text-xs:   0.72rem;
+  --text-sm:   0.82rem;
+  --text-base: 1rem;
+  --text-lg:   1.15rem;
+  --text-xl:   1.35rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  --transition: 0.15s ease;
+
+  /* Light theme */
+  --color-bg:               #f8f7f4;
+  --color-surface:          #ffffff;
+  --color-surface-2:        #f4f2ee;
+  --color-border:           #e0dbd2;
+  --color-border-strong:    #b8b0a4;
+  --color-text:             #1a1814;
+  --color-text-muted:       #6b6560;
+  --color-text-faint:       #a09890;
+  --color-primary:          #7a2a2a;
+  --color-primary-bg:       #f9f0f0;
+  --color-teal:             #1a6b5a;
+  --color-teal-highlight:   #e8f5f1;
+  --color-active:           #1565c0;
+  --color-active-bg:        #e8f0fe;
+  --color-active-border:    #1565c0;
+  --color-practice-done-comp: var(--color-primary);
+  --color-practice-done-atom: var(--color-teal);
+
+  /* Truth table specific */
+  --color-main-col-bg:      #fff8e1;
+  --color-main-col-border:  #f9a825;
+  --color-T:                #1a6b5a;
+  --color-F:                #7a2a2a;
+  --color-correct:          #1a6b5a;
+  --color-wrong:            #c62828;
+  --color-separator-line:   #b8b0a4;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] {
+  --color-bg:              #18171a;
+  --color-surface:         #231f27;
+  --color-surface-2:       #2c2830;
+  --color-border:          #3c3845;
+  --color-border-strong:   #5c5870;
+  --color-text:            #eeeaf4;
+  --color-text-muted:      #a09ab0;
+  --color-text-faint:      #6a6478;
+  --color-primary:         #e07070;
+  --color-primary-bg:      #2a1a1a;
+  --color-teal:            #5bc4a8;
+  --color-teal-highlight:  #0d2520;
+  --color-active:          #7ab3f8;
+  --color-active-bg:       #0d1a30;
+  --color-active-border:   #7ab3f8;
+  --color-main-col-bg:     #2a2510;
+  --color-main-col-border: #b8920a;
+  --color-T:               #5bc4a8;
+  --color-F:               #e07070;
+  --color-separator-line:  #5c5870;
+}
+
+/* ── Base ────────────────────────────────────────────────────── */
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.app-logo { display: flex; align-items: baseline; gap: var(--space-2); }
+.logo-name {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-xl);
+  color: var(--color-text);
+}
+.logo-sub {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+.header-actions { display: flex; align-items: center; gap: var(--space-3); }
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  padding: 0.35rem 0.85rem;
+  transition: all var(--transition);
+  display: inline-flex; align-items: center; gap: var(--space-1);
+}
+.btn-primary {
+  background: var(--color-primary); color: #fff; border-color: var(--color-primary);
+}
+.btn-primary:hover { opacity: 0.88; }
+.btn-secondary {
+  background: var(--color-surface); color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+.btn-secondary:hover { background: var(--color-surface-2); }
+.btn-ghost {
+  background: transparent; color: var(--color-text-muted);
+  border-color: var(--color-border);
+}
+.btn-ghost:hover { background: var(--color-surface-2); color: var(--color-text); }
+.btn-sm { padding: 0.2rem 0.6rem; font-size: var(--text-xs); }
+
+/* ── Symbol buttons ──────────────────────────────────────────── */
+.sym-btn {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  padding: 0.1rem 0.5rem;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.sym-btn:hover { background: var(--color-teal-highlight); border-color: var(--color-teal); }
+
+/* ── Card ────────────────────────────────────────────────────── */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; gap: var(--space-4);
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-3); flex-wrap: wrap;
+}
+.card-title {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-lg);
+  color: var(--color-primary);
+}
+
+/* ── Layout ──────────────────────────────────────────────────── */
+.app-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4);
+  display: flex; flex-direction: column; gap: var(--space-5);
+}
+
+/* ── Mode tabs ───────────────────────────────────────────────── */
+.mode-tabs {
+  display: flex; gap: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-4);
+}
+.mode-tab {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  background: none; border: none;
+  border-bottom: 2.5px solid transparent;
+  color: var(--color-text-muted);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer; transition: all var(--transition);
+  margin-bottom: -1px;
+}
+.mode-tab:hover { color: var(--color-text); }
+.mode-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* ── Formula input area ──────────────────────────────────────── */
+.formula-row {
+  display: flex; align-items: center; gap: var(--space-2);
+}
+.formula-input {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.7rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: border-color var(--transition);
+}
+.formula-input:focus { outline: none; border-color: var(--color-primary); }
+.formula-input.valid   { border-color: var(--color-teal); }
+.formula-input.invalid { border-color: var(--color-wrong); }
+.formula-status {
+  font-family: var(--font-body); font-style: italic;
+  font-size: var(--text-sm);
+  min-width: 1.5rem; text-align: center;
+}
+.formula-status.ok  { color: var(--color-teal); }
+.formula-status.err { color: var(--color-wrong); }
+
+/* Multiple formulas (for consistency/validity) */
+.formula-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.formula-slot { display: flex; align-items: center; gap: var(--space-2); }
+.formula-remove {
+  font-family: var(--font-sans); font-size: var(--text-sm);
+  background: none; border: none; color: var(--color-text-faint);
+  cursor: pointer; padding: 0.2rem 0.4rem; border-radius: var(--radius-sm);
+  transition: all var(--transition); flex-shrink: 0;
+}
+.formula-remove:hover { color: var(--color-wrong); background: #ffeef0; }
+.formula-role-tag {
+  font-family: var(--font-sans); font-size: var(--text-xs);
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--color-text-faint); min-width: 4rem; text-align: right;
+}
+.formula-role-tag.premise  { color: var(--color-teal); }
+.formula-role-tag.conclusion { color: var(--color-primary); }
+.formula-role-tag.formula  { color: var(--color-text-muted); }
+
+/* Sym bar */
+.sym-bar { display: flex; gap: var(--space-1); flex-wrap: wrap; }
+
+/* Examples */
+.examples-row {
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+}
+.examples-label {
+  font-family: var(--font-sans); font-size: var(--text-xs);
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--color-text-faint);
+}
+.example-chip {
+  font-family: var(--font-body); font-size: var(--text-sm);
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+  border-radius: 99px; padding: 0.15rem 0.7rem;
+  cursor: pointer; transition: all var(--transition); color: var(--color-text);
+}
+.example-chip:hover { background: var(--color-teal-highlight); border-color: var(--color-teal); }
+.example-chip.active { background: var(--color-teal-highlight); border-color: var(--color-teal); font-weight: bold; }
+
+/* ── Truth Table ─────────────────────────────────────────────── */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+}
+table.truth-table {
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  min-width: max-content;
+  width: 100%;
+}
+table.truth-table th {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-weight: normal;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1.5px solid var(--color-separator-line);
+  border-right: 1px solid var(--color-border);
+  text-align: center;
+  white-space: nowrap;
+  background: var(--color-surface-2);
+}
+table.truth-table th:last-child { border-right: none; }
+table.truth-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  text-align: center;
+  white-space: nowrap;
+  min-width: 2.5rem;
+}
+table.truth-table td:last-child { border-right: none; }
+table.truth-table tr:last-child td { border-bottom: none; }
+
+/* Separator between letters and subformulas */
+table.truth-table th.sep-right,
+table.truth-table td.sep-right {
+  border-right: 2px solid var(--color-separator-line);
+}
+
+/* Main connective column highlight */
+table.truth-table th.main-col {
+  background: var(--color-main-col-bg);
+  color: var(--color-text);
+  border-right: 2px solid var(--color-main-col-border);
+  border-left: 2px solid var(--color-main-col-border);
+  font-weight: bold; font-style: normal;
+}
+table.truth-table td.main-col {
+  background: var(--color-main-col-bg);
+  border-right: 2px solid var(--color-main-col-border);
+  border-left: 2px solid var(--color-main-col-border);
+  font-weight: bold;
+}
+
+/* T/F value colors */
+.tv-T { color: var(--color-T); font-weight: bold; }
+.tv-F { color: var(--color-F); }
+
+/* Highlighted row (counterexample / witness) */
+tr.row-highlight td { background: #fff8e1; }
+[data-theme="dark"] tr.row-highlight td { background: #2a2510; }
+
+/* ── Build mode: interactive cells ──────────────────────────── */
+.cell-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 2rem; padding: 0.15rem 0.5rem;
+  font-family: var(--font-body); font-size: var(--text-base);
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  color: var(--color-text-faint);
+  cursor: pointer; transition: all var(--transition);
+  user-select: none;
+}
+.cell-btn:hover { border-color: var(--color-active); background: var(--color-active-bg); color: var(--color-active); }
+.cell-btn.filled-T {
+  border-style: solid; border-color: var(--color-teal);
+  background: var(--color-teal-highlight); color: var(--color-T); font-weight: bold;
+}
+.cell-btn.filled-F {
+  border-style: solid; border-color: var(--color-border-strong);
+  background: var(--color-surface); color: var(--color-F);
+}
+/* Locked cells (sentence letters in build mode — pre-filled) */
+.cell-locked {
+  display: inline-block;
+  min-width: 2rem; padding: 0.15rem 0.5rem;
+  text-align: center;
+}
+
+/* Cell state after check */
+.cell-btn.cell-correct {
+  border-color: var(--color-correct);
+  background: var(--color-teal-highlight);
+}
+.cell-btn.cell-wrong {
+  border-color: var(--color-wrong);
+  background: #ffeef0;
+  color: var(--color-wrong);
+}
+[data-theme="dark"] .cell-btn.cell-wrong { background: #2a1010; }
+
+/* ── Verdict / result banner ─────────────────────────────────── */
+.verdict-banner {
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  display: flex; align-items: flex-start; gap: var(--space-3);
+}
+.verdict-banner.success {
+  background: var(--color-teal-highlight); border: 1px solid var(--color-teal);
+  color: var(--color-teal);
+}
+.verdict-banner.error {
+  background: #ffeef0; border: 1px solid var(--color-wrong); color: var(--color-wrong);
+}
+[data-theme="dark"] .verdict-banner.error { background: #2a1010; }
+.verdict-banner.neutral {
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+.verdict-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.verdict-content { display: flex; flex-direction: column; gap: var(--space-1); }
+.verdict-title { font-weight: 700; }
+.verdict-detail { font-weight: normal; }
+
+/* Classification chips */
+.classification-row {
+  display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-1);
+}
+.class-chip {
+  font-family: var(--font-sans); font-size: var(--text-xs); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  border-radius: 99px; padding: 0.2rem 0.65rem;
+  border: 1.5px solid;
+}
+.class-chip.tautology   { background: var(--color-teal-highlight); border-color: var(--color-teal); color: var(--color-teal); }
+.class-chip.contradiction { background: #ffeef0; border-color: var(--color-wrong); color: var(--color-wrong); }
+[data-theme="dark"] .class-chip.contradiction { background: #2a1010; }
+.class-chip.contingent  { background: var(--color-surface-2); border-color: var(--color-border-strong); color: var(--color-text-muted); }
+.class-chip.consistent  { background: var(--color-teal-highlight); border-color: var(--color-teal); color: var(--color-teal); }
+.class-chip.inconsistent { background: #ffeef0; border-color: var(--color-wrong); color: var(--color-wrong); }
+[data-theme="dark"] .class-chip.inconsistent { background: #2a1010; }
+.class-chip.valid       { background: var(--color-teal-highlight); border-color: var(--color-teal); color: var(--color-teal); }
+.class-chip.invalid     { background: #ffeef0; border-color: var(--color-wrong); color: var(--color-wrong); }
+[data-theme="dark"] .class-chip.invalid { background: #2a1010; }
+
+/* ── Error display ───────────────────────────────────────────── */
+.parse-error {
+  font-family: var(--font-sans); font-size: var(--text-sm);
+  color: var(--color-wrong);
+  display: flex; align-items: center; gap: var(--space-2);
+}
+
+/* ── Hint text ───────────────────────────────────────────────── */
+.hint-text {
+  font-family: var(--font-body); font-style: italic;
+  font-size: var(--text-sm); color: var(--color-text-muted);
+}
+
+/* ── Build mode action row ───────────────────────────────────── */
+.build-actions {
+  display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+}
+.build-score {
+  font-family: var(--font-sans); font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+.build-feedback {
+  font-family: var(--font-sans); font-size: var(--text-sm);
+  font-weight: 600;
+}
+.build-feedback.correct { color: var(--color-correct); }
+.build-feedback.wrong   { color: var(--color-wrong); }
+
+/* ── Help panel ──────────────────────────────────────────────── */
+.help-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.help-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  max-width: 540px; width: 90%;
+  max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  display: flex; flex-direction: column; gap: var(--space-4);
+}
+.help-box h2 { font-family: var(--font-body); font-style: italic; font-size: var(--text-xl); color: var(--color-primary); }
+.help-box h3 { font-family: var(--font-sans); font-size: var(--text-sm); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-top: var(--space-2); }
+.help-box p, .help-box li { font-size: var(--text-sm); line-height: 1.65; }
+.help-box ul { padding-left: var(--space-4); }
+.help-box code { font-family: var(--font-mono); font-size: 0.85em; background: var(--color-surface-2); padding: 0.1em 0.3em; border-radius: 3px; }
+
+/* ── Dark mode toggle ────────────────────────────────────────── */
+.theme-btn {
+  background: none; border: none; cursor: pointer; font-size: 1rem;
+  color: var(--color-text-muted); padding: var(--space-1); border-radius: var(--radius-sm);
+  transition: color var(--transition);
+}
+.theme-btn:hover { color: var(--color-text); }
+
+/* ── Validity: premise/conclusion separator ──────────────────── */
+.conc-separator {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-family: var(--font-sans); font-size: var(--text-xs);
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--color-text-faint); margin: var(--space-1) 0;
+}
+.conc-separator::before, .conc-separator::after {
+  content: ''; flex: 1; height: 1px; background: var(--color-border);
+}
+
+/* ── Check mode: task selector ───────────────────────────────── */
+.task-selector {
+  display: flex; gap: var(--space-2); flex-wrap: wrap;
+}
+.task-btn {
+  font-family: var(--font-sans); font-size: var(--text-xs); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  background: var(--color-surface-2); border: 1.5px solid var(--color-border);
+  border-radius: 99px; padding: 0.25rem 0.8rem;
+  cursor: pointer; transition: all var(--transition); color: var(--color-text-muted);
+}
+.task-btn:hover { border-color: var(--color-teal); color: var(--color-teal); }
+.task-btn.active { background: var(--color-teal-highlight); border-color: var(--color-teal); color: var(--color-teal); }
+
+/* ── No-formula placeholder ──────────────────────────────────── */
+.empty-placeholder {
+  text-align: center; padding: var(--space-6) var(--space-4);
+  color: var(--color-text-faint);
+  font-family: var(--font-body); font-style: italic;
+}
+
+/* responsive */
+@media (max-width: 600px) {
+  .app-header { padding: var(--space-3) var(--space-4); }
+  .app-main { padding: var(--space-4) var(--space-3); }
+  table.truth-table th, table.truth-table td { padding: var(--space-1) var(--space-2); font-size: var(--text-sm); }
+}

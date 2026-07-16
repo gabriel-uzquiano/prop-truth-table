@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formula Checker — Propositional Semantics</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-logo">
+      <span class="logo-name">Formula Checker</span>
+      <span class="logo-sub">Propositional Semantics</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" onclick="toggleHelp()">Help</button>
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle dark mode">☾</button>
+    </div>
+  </header>
+
+  <!-- Help overlay -->
+  <div class="help-overlay" id="help-overlay" hidden onclick="if(event.target===this)toggleHelp()">
+    <div class="help-box">
+      <h2>Formula Checker</h2>
+      <h3>Connectives</h3>
+      <ul>
+        <li><code>¬</code> negation — type <code>~</code> or <code>-</code></li>
+        <li><code>∧</code> conjunction — type <code>&amp;</code> or <code>/\</code></li>
+        <li><code>∨</code> disjunction — type <code>|</code> or <code>\/</code></li>
+        <li><code>→</code> conditional — type <code>-&gt;</code> or <code>&gt;</code></li>
+        <li><code>↔</code> biconditional (abbreviation) — type <code>&lt;-&gt;</code> or <code>&lt;&gt;</code></li>
+      </ul>
+      <h3>Sentence Letters</h3>
+      <p>Single letters <code>p</code>–<code>z</code>, optionally with numeric subscripts: <code>p1</code>, <code>q2</code>.</p>
+      <h3>Truth Table Conventions</h3>
+      <p>Columns: sentence letters (left) | subformulas | full formula (highlighted). Rows: rightmost letter alternates fastest (T, F, T, F …).</p>
+      <h3>Check Mode</h3>
+      <p><strong>Formula</strong> — classifies a single formula as tautology, contradiction, or contingent.</p>
+      <p><strong>Consistency</strong> — checks whether a set of formulas has at least one satisfying assignment.</p>
+      <p><strong>Validity</strong> — checks whether an argument (premises + conclusion) is valid (no counterexample).</p>
+      <h3>Build Mode</h3>
+      <p>Enter a formula and fill in the truth table cell by cell. Click a cell to cycle through T, F, or blank. Hit <strong>Check</strong> to see which cells are correct.</p>
+      <button class="btn btn-ghost" style="align-self:flex-start; margin-top:var(--space-2)" onclick="toggleHelp()">Close</button>
+    </div>
+  </div>
+
+  <main class="app-main">
+
+    <!-- Mode tabs -->
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tab-check" onclick="switchMode('check')">Check</button>
+      <button class="mode-tab" id="tab-build" onclick="switchMode('build')">Build</button>
+    </div>
+
+    <!-- ── CHECK PANEL ─────────────────────────────────────── -->
+    <div id="check-panel">
+
+      <!-- Input card -->
+      <section class="card">
+        <div class="card-header">
+          <span class="card-title">Formula</span>
+          <div id="check-new-problem-btn-wrap">
+            <button class="btn btn-ghost btn-sm" id="check-new-problem-btn" onclick="newProblemCheck()" hidden>New problem</button>
+          </div>
+        </div>
+
+        <!-- Task selector -->
+        <div class="task-selector">
+          <button class="task-btn active" data-task="formula" onclick="switchTask('formula')">Single Formula</button>
+          <button class="task-btn" data-task="consistency" onclick="switchTask('consistency')">Consistency</button>
+          <button class="task-btn" data-task="validity" onclick="switchTask('validity')">Validity</button>
+        </div>
+
+        <!-- Symbol bar -->
+        <div class="sym-bar">
+          <button class="sym-btn" onclick="insertCheckSym('¬')" title="Negation">¬</button>
+          <button class="sym-btn" onclick="insertCheckSym('∧')" title="Conjunction">∧</button>
+          <button class="sym-btn" onclick="insertCheckSym('∨')" title="Disjunction">∨</button>
+          <button class="sym-btn" onclick="insertCheckSym('→')" title="Conditional">→</button>
+          <button class="sym-btn" onclick="insertCheckSym('↔')" title="Biconditional">↔</button>
+        </div>
+
+        <!-- Formula list -->
+        <div class="formula-list" id="check-formula-list"></div>
+
+        <!-- Conclusion separator (validity only) -->
+        <div class="conc-separator" id="check-conc-sep" hidden>conclusion</div>
+
+        <!-- Add premise / formula -->
+        <div style="display:flex; gap:var(--space-2); align-items:center">
+          <button class="btn btn-ghost btn-sm" id="check-add-btn" onclick="addPremise()" hidden>+ Add premise</button>
+        </div>
+
+        <!-- Examples -->
+        <div class="examples-row">
+          <span class="examples-label">Examples</span>
+          <button class="example-chip" data-ex-label="(p → q) ∨ (q → p)"
+            onclick="loadCheckExample({mode:'check',task:'formula',formulas:['(p → q) ∨ (q → p)'],label:'(p → q) ∨ (q → p)'})">
+            (p → q) ∨ (q → p)
+          </button>
+          <button class="example-chip" data-ex-label="¬(p → q) ∧ (q ∨ ¬p)"
+            onclick="loadCheckExample({mode:'check',task:'formula',formulas:['¬(p → q) ∧ (q ∨ ¬p)'],label:'¬(p → q) ∧ (q ∨ ¬p)'})">
+            ¬(p → q) ∧ (q ∨ ¬p)
+          </button>
+          <button class="example-chip" data-ex-label="p→q, q→r, r→¬p"
+            onclick="loadCheckExample({mode:'check',task:'consistency',formulas:['p → q','q → r','r → ¬p'],label:'p→q, q→r, r→¬p'})">
+            p→q, q→r, r→¬p
+          </button>
+          <button class="example-chip" data-ex-label="p∨q, ¬(p∧¬r) ⊢ r→q"
+            onclick="loadCheckExample({mode:'check',task:'validity',formulas:['p ∨ q','¬(p ∧ ¬r)','r → q'],label:'p∨q, ¬(p∧¬r) ⊢ r→q'})">
+            p∨q, ¬(p∧¬r) ⊢ r→q
+          </button>
+          <button class="example-chip" data-ex-label="p∨q, p→¬r ⊢ ¬r∨p"
+            onclick="loadCheckExample({mode:'check',task:'validity',formulas:['p ∨ q','p → ¬r','¬r ∨ p'],label:'p∨q, p→¬r ⊢ ¬r∨p'})">
+            p∨q, p→¬r ⊢ ¬r∨p
+          </button>
+        </div>
+
+        <!-- Evaluate button -->
+        <div>
+          <button class="btn btn-primary" id="check-eval-btn" onclick="runCheck()">Evaluate</button>
+        </div>
+      </section>
+
+      <!-- Truth table output -->
+      <section class="card" id="check-output-card" hidden>
+        <div class="card-header">
+          <span class="card-title" id="check-output-title">Truth Table</span>
+        </div>
+        <div id="check-table-wrapper"></div>
+        <div id="check-result"></div>
+      </section>
+
+    </div><!-- /check-panel -->
+
+    <!-- ── BUILD PANEL ─────────────────────────────────────── -->
+    <div id="build-panel" hidden>
+
+      <!-- Input card -->
+      <section class="card">
+        <div class="card-header">
+          <span class="card-title">Formula</span>
+          <button class="btn btn-ghost btn-sm" id="build-new-problem-btn" onclick="newProblemBuild()" hidden>New problem</button>
+        </div>
+
+        <!-- Symbol bar -->
+        <div class="sym-bar">
+          <button class="sym-btn" onclick="insertBuildSym('¬')" title="Negation">¬</button>
+          <button class="sym-btn" onclick="insertBuildSym('∧')" title="Conjunction">∧</button>
+          <button class="sym-btn" onclick="insertBuildSym('∨')" title="Disjunction">∨</button>
+          <button class="sym-btn" onclick="insertBuildSym('→')" title="Conditional">→</button>
+          <button class="sym-btn" onclick="insertBuildSym('↔')" title="Biconditional">↔</button>
+        </div>
+
+        <!-- Input row -->
+        <div class="formula-row">
+          <input type="text" class="formula-input" id="build-input"
+            placeholder="e.g. ¬(p ∧ q)"
+            autocomplete="off" spellcheck="false"
+            oninput="onBuildInput()">
+          <span class="formula-status" id="build-status"></span>
+        </div>
+
+        <!-- Examples -->
+        <div class="examples-row">
+          <span class="examples-label">Examples</span>
+          <button class="example-chip build-example-chip" data-formula="¬(p ∧ q)" onclick="loadBuildExample('¬(p ∧ q)')">¬(p ∧ q)</button>
+          <button class="example-chip build-example-chip" data-formula="¬(q → p)" onclick="loadBuildExample('¬(q → p)')">¬(q → p)</button>
+          <button class="example-chip build-example-chip" data-formula="¬(p ∧ q) ∨ ¬(q → p)" onclick="loadBuildExample('¬(p ∧ q) ∨ ¬(q → p)')">¬(p∧q) ∨ ¬(q→p)</button>
+          <button class="example-chip build-example-chip" data-formula="(p ∧ q) → r" onclick="loadBuildExample('(p ∧ q) → r')">(p∧q)→r</button>
+          <button class="example-chip build-example-chip" data-formula="(p → q) ∨ (q → p)" onclick="loadBuildExample('(p → q) ∨ (q → p)')">(p→q)∨(q→p)</button>
+        </div>
+
+        <p class="hint-text">Fill in every cell by clicking to cycle T / F. Sentence-letter columns are pre-filled. Click <strong>Check</strong> when done.</p>
+      </section>
+
+      <!-- Build table card -->
+      <section class="card" id="build-table-card" style="display:none" hidden>
+        <div class="card-header">
+          <span class="card-title" id="build-table-title">Truth Table</span>
+        </div>
+        <div id="build-table-wrapper"></div>
+        <div id="build-actions-row" class="build-actions" hidden>
+          <button class="btn btn-primary" id="build-check-btn" onclick="checkBuild()">Check</button>
+          <button class="btn btn-ghost btn-sm" id="build-reset-btn" onclick="resetBuild()">Reset</button>
+          <span class="build-feedback" id="build-feedback"></span>
+        </div>
+      </section>
+
+    </div><!-- /build-panel -->
+
+  </main>
+
+  <script src="parser.js?v=1"></script>
+  <script src="evaluator.js?v=1"></script>
+  <script src="app.js?v=1"></script>
+</body>
+</html>
