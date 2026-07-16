@@ -214,3 +214,6 @@ function collectLetters(ast) {
   walk(ast);
   return [...letters].sort();
 }
+
+// Alias for app.js compatibility
+var parseFormula = parse;
