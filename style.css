@@ -368,13 +368,13 @@ input { font: inherit; color: inherit; }
   color: var(--color-teal);
   font-family: var(--font-sans);
   font-style: normal;
-  font-weight: bold;
+  font-weight: normal;
 }
 .tv-F {
   color: var(--color-primary);
   font-family: var(--font-sans);
   font-style: normal;
-  font-weight: bold;
+  font-weight: normal;
 }
 
 /* Highlighted consistent row */
@@ -401,15 +401,15 @@ input { font: inherit; color: inherit; }
   padding: 2px var(--space-2);
   border: 1px solid var(--color-border); border-radius: var(--radius-sm);
   background: var(--color-surface-2);
-  font-family: var(--font-body); font-style: italic; font-size: var(--text-base);
+  font-family: var(--font-sans); font-style: normal; font-size: var(--text-base);
   color: var(--color-text-faint);
   transition: all var(--transition);
   cursor: pointer;
 }
 .cell-btn:hover { border-color: var(--color-teal); background: var(--color-teal-highlight); }
 .cell-btn.filled { color: var(--color-text); border-color: var(--color-border); }
-.cell-btn[data-val="T"] { color: var(--color-teal); font-weight: bold; }
-.cell-btn[data-val="F"] { color: var(--color-primary); font-weight: bold; }
+.cell-btn[data-val="T"] { color: var(--color-teal); font-weight: normal; }
+.cell-btn[data-val="F"] { color: var(--color-primary); font-weight: normal; }
 
 /* After check: correct / wrong feedback */
 .cell-btn.correct {
