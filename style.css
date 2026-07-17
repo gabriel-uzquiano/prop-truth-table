@@ -138,7 +138,7 @@ input { font: inherit; color: inherit; }
   padding: var(--space-3) var(--space-6);
   display: flex; align-items: baseline; justify-content: space-between;
 }
-.logo { display: flex; align-items: baseline; gap: var(--space-3); }
+.logo, .header-brand { display: flex; align-items: baseline; gap: 2.5rem; }
 .logo-text {
   font-size: var(--text-lg); font-weight: normal; font-style: italic;
   color: var(--color-text); font-family: var(--font-body);
