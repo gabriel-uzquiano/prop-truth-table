@@ -610,3 +610,79 @@ function runCheck() {
   }
   verd.style.display = '';
 }
+
+/* ── URL hash encode / decode ──────────────────────────────────────── */
+// Format: #v1:<base64(JSON)>
+// JSON shape: { formulas?: string[], build?: string }
+
+function _ttEncode(obj) {
+  try { return '#v1:' + btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
+  catch (e) { return ''; }
+}
+function _ttDecode(hash) {
+  try {
+    if (!hash || !hash.startsWith('#v1:')) return null;
+    return JSON.parse(decodeURIComponent(escape(atob(hash.slice(4)))));
+  } catch (e) { return null; }
+}
+
+function pushHash() {
+  var formulas = [];
+  document.querySelectorAll('.formula-slot .formula-input').forEach(function (inp) {
+    var v = inp.value.trim();
+    if (v) formulas.push(v);
+  });
+  var buildInp = document.getElementById('build-input');
+  var build = buildInp ? buildInp.value.trim() : '';
+  var obj = {};
+  if (formulas.length) obj.formulas = formulas;
+  if (build) obj.build = build;
+  var h = Object.keys(obj).length ? _ttEncode(obj) : '';
+  history.replaceState(null, '', h || window.location.pathname);
+}
+
+function loadHash() {
+  var state = _ttDecode(window.location.hash);
+  if (!state) return;
+
+  // Restore Formulas card
+  if (state.formulas && state.formulas.length) {
+    // Clear existing slots and rebuild
+    var list = document.getElementById('formula-list');
+    // Remove all existing slots
+    _formulaSlots = [];
+    list.innerHTML = '';
+    state.formulas.forEach(function (f) {
+      addFormulaSlot();
+      var slots = list.querySelectorAll('.formula-slot');
+      var lastSlot = slots[slots.length - 1];
+      var inp = lastSlot.querySelector('.formula-input');
+      inp.value = f;
+      onSlotInput(inp);
+    });
+  }
+
+  // Restore Build card
+  if (state.build) {
+    var bi = document.getElementById('build-input');
+    if (bi) {
+      bi.value = state.build;
+      onBuildInput();
+    }
+  }
+}
+
+// Wire pushHash into every state-changing action
+(function () {
+  // Patch onSlotInput to push hash after updating state
+  var _origSlotInput = onSlotInput;
+  onSlotInput = function (inp) { _origSlotInput(inp); pushHash(); };
+
+  // Patch onBuildInput
+  var _origBuildInput = onBuildInput;
+  onBuildInput = function () { _origBuildInput(); pushHash(); };
+
+  // Load state — runs after all globals are ready (script is deferred or at end of body)
+  // Use setTimeout(0) to ensure the initial addFormulaSlot() DOM is rendered first
+  setTimeout(loadHash, 0);
+})();
