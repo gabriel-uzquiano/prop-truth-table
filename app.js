@@ -28,17 +28,17 @@ function toggleHelp(e) {
 
 /* ── Live ASCII replacement ─────────────────────────── */
 var PROP_ASCII_MAP = [
-  [/<->/g,  '↔'],
-  [/->/g,   '→'],
-  [/\/\\/g, '∧'],
-  [/\\\/g, '∨'],
-  [/~/g,   '¬'],
-  [/&/g,   '∧'],
-  [/\|/g,  '∨'],
+  ['<->','\u2194'],
+  ['->','\u2192'],
+  ['/\\','\u2227'],
+  ['\\/','\u2228'],
+  ['~','\u00ac'],
+  ['&','\u2227'],
+  ['|','\u2228'],
 ];
 function applyPropAscii(val) {
   var s = val;
-  for (var _i = 0; _i < PROP_ASCII_MAP.length; _i++) s = s.replace(PROP_ASCII_MAP[_i][0], PROP_ASCII_MAP[_i][1]);
+  for (var _i = 0; _i < PROP_ASCII_MAP.length; _i++) s = s.split(PROP_ASCII_MAP[_i][0]).join(PROP_ASCII_MAP[_i][1]);
   return s;
 }
 function liveReplaceInput(el) {
