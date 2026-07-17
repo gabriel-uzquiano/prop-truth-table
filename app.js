@@ -26,6 +26,40 @@ function toggleHelp(e) {
   }
 }
 
+/* ── Live ASCII replacement ─────────────────────────── */
+var PROP_ASCII_MAP = [
+  [/<->/g,  '↔'],
+  [/->/g,   '→'],
+  [/\/\\/g, '∧'],
+  [/\\\/g, '∨'],
+  [/~/g,   '¬'],
+  [/&/g,   '∧'],
+  [/\|/g,  '∨'],
+];
+function applyPropAscii(val) {
+  var s = val;
+  for (var _i = 0; _i < PROP_ASCII_MAP.length; _i++) s = s.replace(PROP_ASCII_MAP[_i][0], PROP_ASCII_MAP[_i][1]);
+  return s;
+}
+function liveReplaceInput(el) {
+  var orig = el.value, pos = el.selectionStart;
+  var next = applyPropAscii(orig);
+  if (next !== orig) {
+    el.value = next;
+    var newPos = pos + (next.length - orig.length);
+    el.setSelectionRange(newPos, newPos);
+  }
+}
+document.addEventListener('keyup', function (e) {
+  if (e.target.classList && e.target.classList.contains('formula-input')) {
+    liveReplaceInput(e.target);
+  }
+});
+(function () {
+  var bi = document.getElementById('build-input');
+  if (bi) bi.addEventListener('keyup', function () { liveReplaceInput(bi); });
+})();
+
 /* ── Shared parser helpers ─────────────────────────────────────── */
 // parser.js exposes: parseFormula(str) → AST or throws
 // evaluator.js exposes: evaluate(ast, assignment) → bool
