@@ -329,8 +329,8 @@ input { font: inherit; color: inherit; }
 
 /* Header row */
 .truth-table thead th {
-  font-family: var(--font-body);
-  font-style: italic;
+  font-family: var(--font-sans);
+  font-style: normal;
   font-weight: normal;
   font-size: var(--text-sm);
   color: var(--color-text-muted);
@@ -352,8 +352,8 @@ input { font: inherit; color: inherit; }
   text-align: center;
   padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--color-divider);
-  font-family: var(--font-body);
-  font-style: italic;
+  font-family: var(--font-sans);
+  font-style: normal;
   font-size: var(--text-base);
 }
 .truth-table tbody td.col-sep { border-right: 2px solid var(--color-border); }
@@ -363,17 +363,17 @@ input { font: inherit; color: inherit; }
   border-right: 2px solid var(--color-main-col-border);
 }
 
-/* T / F values — same teal/maroon as model checker */
+/* T / F values — upright sans-serif */
 .tv-T {
   color: var(--color-teal);
-  font-family: var(--font-body);
-  font-style: italic;
+  font-family: var(--font-sans);
+  font-style: normal;
   font-weight: bold;
 }
 .tv-F {
   color: var(--color-primary);
-  font-family: var(--font-body);
-  font-style: italic;
+  font-family: var(--font-sans);
+  font-style: normal;
   font-weight: bold;
 }
 
