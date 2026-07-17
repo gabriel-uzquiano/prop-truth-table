@@ -19,8 +19,11 @@
 function toggleHelp(e) {
   if (e) e.preventDefault();
   var panel = document.getElementById('help-panel');
-  if (panel.hasAttribute('hidden')) panel.style.display = '';
-  else panel.style.display = 'none';
+  if (panel.hasAttribute('hidden')) {
+    panel.removeAttribute('hidden');
+  } else {
+    panel.setAttribute('hidden', '');
+  }
 }
 
 /* ── Shared parser helpers ─────────────────────────────────────── */
