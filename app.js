@@ -680,12 +680,18 @@ function loadHash() {
 
   // Patch onBuildInput
   var _origBuildInput = onBuildInput;
-  onBuildInput = function () { _origBuildInput(); pushHash(); };
+  onBuildInput = function () {
+    _origBuildInput();
+    pushHash();
+    // If solved mode is active, auto-fill after table renders
+    var solved = new URLSearchParams(window.location.search).get('solved') === '1';
+    if (solved) setTimeout(solveAll, 0);
+  };
 
   // Load state — runs after all globals are ready (script is deferred or at end of body)
   // Use setTimeout(0) to ensure the initial addFormulaSlot() DOM is rendered first
   setTimeout(loadHash, 0);
-  setTimeout(applyCardMode, 0);
+  setTimeout(applyCardMode, 100);  // after loadHash + onBuildInput have run
 })();
 
 // ── Card mode (?card=table) ───────────────────────────────────────────────────
