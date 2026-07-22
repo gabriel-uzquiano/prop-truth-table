@@ -691,9 +691,31 @@ function loadHash() {
 // ── Card mode (?card=table) ───────────────────────────────────────────────────
 // ?card=table → show Build table only: hide Formulas, Check, header, help,
 //               build-input row, examples, and buttons; formula comes from hash
+// Auto-fill all build cells with correct answers (used by ?card=table&solved=1)
+function solveAll() {
+  if (!_buildTable || !_buildCells.length) return;
+  var rows = _buildTable.rows;
+  _buildCells.forEach(function (cell) {
+    var el = document.getElementById(cell.id);
+    if (!el) return;
+    var val = rows[cell.rowIdx].colVals[cell.colIdx] ? 'T' : 'F';
+    cell.answer = val;
+    el.dataset.val = val;
+    el.textContent = val;
+    el.classList.add('filled', 'tv-' + val, 'correct');
+    el.classList.remove('wrong');
+    el.style.pointerEvents = 'none';  // read-only
+  });
+  var verd = document.getElementById('build-verdict');
+  if (verd) verd.style.display = 'none';  // no verdict needed
+  var btnRow = document.getElementById('build-btn-row');
+  if (btnRow) btnRow.hidden = true;  // hide Reset/Check buttons
+}
+
 function applyCardMode() {
-  var cp = new URLSearchParams(window.location.search).get('card');
-  if (!cp) return;
+  var cp     = new URLSearchParams(window.location.search).get('card');
+  var solved = new URLSearchParams(window.location.search).get('solved') === '1';
+  if (!cp && !solved) return;
 
   // Always hide header, help, copy/new buttons
   var header = document.querySelector('.app-header');
@@ -718,6 +740,7 @@ function applyCardMode() {
     if (buildStatus) buildStatus.hidden = true;
     var buildExamples = document.querySelector('#build-section .formula-examples');
     if (buildExamples) buildExamples.hidden = true;
-    // Keep the table, Reset and Check buttons visible
+    // Auto-fill if ?solved=1
+    if (solved) solveAll();
   }
 }
