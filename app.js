@@ -685,4 +685,39 @@ function loadHash() {
   // Load state — runs after all globals are ready (script is deferred or at end of body)
   // Use setTimeout(0) to ensure the initial addFormulaSlot() DOM is rendered first
   setTimeout(loadHash, 0);
+  setTimeout(applyCardMode, 0);
 })();
+
+// ── Card mode (?card=table) ───────────────────────────────────────────────────
+// ?card=table → show Build table only: hide Formulas, Check, header, help,
+//               build-input row, examples, and buttons; formula comes from hash
+function applyCardMode() {
+  var cp = new URLSearchParams(window.location.search).get('card');
+  if (!cp) return;
+
+  // Always hide header, help, copy/new buttons
+  var header = document.querySelector('.app-header');
+  if (header) header.hidden = true;
+  var help = document.getElementById('help-panel');
+  if (help) help.hidden = true;
+  var copyBtn = document.getElementById('copy-link-btn');
+  if (copyBtn) copyBtn.hidden = true;
+  var newBtn = document.getElementById('new-problem-btn');
+  if (newBtn) newBtn.hidden = true;
+
+  if (cp === 'table') {
+    // Hide Formulas and Check cards entirely
+    var fSec = document.getElementById('formula-section');
+    if (fSec) fSec.hidden = true;
+    var cSec = document.getElementById('check-section');
+    if (cSec) cSec.hidden = true;
+    // Hide the Build card's own input row and examples (formula comes from hash)
+    var buildInputWrap = document.querySelector('#build-section .formula-input-wrap');
+    if (buildInputWrap) buildInputWrap.hidden = true;
+    var buildStatus = document.getElementById('build-status');
+    if (buildStatus) buildStatus.hidden = true;
+    var buildExamples = document.querySelector('#build-section .formula-examples');
+    if (buildExamples) buildExamples.hidden = true;
+    // Keep the table, Reset and Check buttons visible
+  }
+}
