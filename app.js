@@ -806,8 +806,21 @@ function applyCheckMode() {
   var help = document.getElementById('help-panel');
   if (help) help.hidden = true;
 
-  // Keep Formulas and Build cards visible so students can work through the table.
-  // Only hide the header (already done above).
+  // Hide the Formulas card (formulas come from hash, already loaded into slots)
+  var fSec = document.getElementById('formula-section');
+  if (fSec) fSec.hidden = true;
+
+  // Hide the Build card's own input row — formula comes from hash
+  var buildInputWrap = document.querySelector('#build-section .formula-input-wrap');
+  if (buildInputWrap) buildInputWrap.hidden = true;
+  var buildStatus = document.getElementById('build-status');
+  if (buildStatus) buildStatus.hidden = true;
+  var buildExamples = document.querySelector('#build-section .formula-examples');
+  if (buildExamples) buildExamples.hidden = true;
+
+  // Generate combined build table once formulas are in slots
+  // (loadHash has already run at 0ms; slots are populated)
+  setTimeout(generateCombinedBuildTable, 10);
 
   // Update Check card hint and button label
   var hint = document.querySelector('#check-section .card-hint');
@@ -1004,3 +1017,135 @@ function runValidityCheck() {
 
 // Run on load — after loadHash (0ms) and applyCardMode (100ms)
 setTimeout(applyCheckMode, 150);
+
+/* ================================================================
+   COMBINED BUILD TABLE
+   Used by ?mode=tautology|equivalence|validity.
+   Shows: sentence-letter columns (pre-filled) + one main-connective
+   column per formula (blank, student fills). No subformula columns.
+   ================================================================ */
+
+var _combinedBuildCells = [];  // [{rowIdx, formulaIdx, id, answer}]
+var _combinedLetters    = [];
+var _combinedFormulas   = [];  // [{ast, label}]
+var _combinedAssignments = [];
+
+function generateCombinedBuildTable() {
+  var validSlots = _formulaSlots.filter(function (s) { return s.ast !== null; });
+  if (validSlots.length === 0) return;
+
+  _combinedFormulas   = validSlots.map(function (s) {
+    return { ast: s.ast, label: astToLabel(s.ast) };
+  });
+  _combinedLetters    = collectLetters(_combinedFormulas.map(function (f) { return f.ast; }));
+  _combinedAssignments = generateAssignments(_combinedLetters);
+  _combinedBuildCells  = [];
+
+  // Build HTML
+  var html = '<div class="tt-scroll"><table class="truth-table"><thead><tr>';
+  _combinedLetters.forEach(function (l, i) {
+    var sep = (i === _combinedLetters.length - 1) ? ' col-sep' : '';
+    html += '<th class="' + sep + '">' + l + '</th>';
+  });
+  _combinedFormulas.forEach(function (f, fi) {
+    var cls = 'col-main' + (fi < _combinedFormulas.length - 1 ? ' col-sep' : '');
+    html += '<th class="' + cls + '">' + f.label + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  _combinedAssignments.forEach(function (asgn, ri) {
+    html += '<tr>';
+    _combinedLetters.forEach(function (l, i) {
+      var sep = (i === _combinedLetters.length - 1) ? ' col-sep' : '';
+      html += '<td class="' + sep + '">' + tvSpan(asgn[l]) + '</td>';
+    });
+    _combinedFormulas.forEach(function (f, fi) {
+      var cls = 'col-main' + (fi < _combinedFormulas.length - 1 ? ' col-sep' : '');
+      var cellId = 'cb-' + ri + '-' + fi;
+      _combinedBuildCells.push({ rowIdx: ri, formulaIdx: fi, id: cellId, answer: null });
+      html += '<td class="' + cls + '">'
+            + '<button class="cell-btn" id="' + cellId + '" data-val=""'
+            + ' onclick="cycleCombinedCell(\'' + cellId + '\')">?</button></td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Inject into build-table-wrap (reuse existing element)
+  var wrap = document.getElementById('build-table-wrap');
+  wrap.innerHTML = html;
+  wrap.style.display = '';
+
+  // Show check/reset buttons (reuse build-btn-row)
+  var btnRow = document.getElementById('build-btn-row');
+  btnRow.style.display = '';
+  btnRow.hidden = false;
+  // Swap button labels for combined mode
+  var checkBtn = document.getElementById('build-check-btn');
+  if (checkBtn) { checkBtn.textContent = 'Check'; checkBtn.onclick = checkCombinedBuild; }
+  var resetBtn = document.getElementById('build-reset-btn');
+  if (resetBtn) { resetBtn.onclick = resetCombinedBuild; }
+
+  document.getElementById('build-verdict').style.display = 'none';
+}
+
+function cycleCombinedCell(cellId) {
+  var el = document.getElementById(cellId);
+  if (!el) return;
+  var cur = el.dataset.val;
+  var next = cur === '' ? 'T' : cur === 'T' ? 'F' : '';
+  el.dataset.val = next;
+  el.textContent = next || '?';
+  el.classList.remove('tv-T', 'tv-F', 'correct', 'wrong');
+  if (next) el.classList.add('tv-' + next);
+}
+
+function resetCombinedBuild() {
+  _combinedBuildCells.forEach(function (cell) {
+    var el = document.getElementById(cell.id);
+    if (!el) return;
+    el.dataset.val = '';
+    el.textContent = '?';
+    el.classList.remove('tv-T', 'tv-F', 'correct', 'wrong');
+    el.style.pointerEvents = '';
+    el.onclick = function () { cycleCombinedCell(cell.id); };
+  });
+  document.getElementById('build-verdict').style.display = 'none';
+}
+
+function checkCombinedBuild() {
+  var allFilled = _combinedBuildCells.every(function (cell) {
+    return document.getElementById(cell.id) &&
+           document.getElementById(cell.id).dataset.val !== '';
+  });
+  var verd = document.getElementById('build-verdict');
+  if (!allFilled) {
+    verd.innerHTML = '<div class="verdict verdict-warn"><span class="verdict-icon">⚠</span>'
+      + '<span>Fill in every cell before checking.</span></div>';
+    verd.style.display = '';
+    return;
+  }
+  var allCorrect = true;
+  _combinedBuildCells.forEach(function (cell) {
+    var el = document.getElementById(cell.id);
+    if (!el) return;
+    var asgn    = _combinedAssignments[cell.rowIdx];
+    var correct = evaluate(_combinedFormulas[cell.formulaIdx].ast, asgn);
+    var entered = el.dataset.val === 'T';
+    if (entered === correct) {
+      el.classList.add('correct'); el.classList.remove('wrong');
+    } else {
+      el.classList.add('wrong'); el.classList.remove('correct');
+      allCorrect = false;
+    }
+    el.style.pointerEvents = 'none';
+  });
+  if (allCorrect) {
+    verd.innerHTML = '<div class="verdict verdict-ok"><span class="verdict-icon">✓</span>'
+      + '<span>All cells correct.</span></div>';
+  } else {
+    verd.innerHTML = '<div class="verdict verdict-fail"><span class="verdict-icon">✗</span>'
+      + '<span>Some cells are incorrect — highlighted in red. Reset to try again.</span></div>';
+  }
+  verd.style.display = '';
+}
