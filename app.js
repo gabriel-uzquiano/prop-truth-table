@@ -64,6 +64,26 @@ document.addEventListener('keyup', function (e) {
 // parser.js exposes: parseFormula(str) → AST or throws
 // evaluator.js exposes: evaluate(ast, assignment) → bool
 
+// Check whether a raw input string is an official (or unofficial-but-accepted) formula.
+// Official formulas are: sentence letters, ¬φ where φ is official, or (φ ○ ψ) with
+// matching outer parens. Unofficial forms like 'p ∧ q → r' (no outer parens on a
+// binary connective) are rejected.
+function isOfficialFormula(raw, ast) {
+  // Sentence letter or negation: always ok
+  if (ast.type === 'letter') return true;
+  if (ast.type === 'neg')    return true;
+  // Binary connective: input must be wrapped in matching outer parens
+  var s = raw.trim();
+  if (s[0] !== '(') return false;
+  // Walk forward matching parens to confirm the final ')' closes the first '('
+  var depth = 0;
+  for (var i = 0; i < s.length; i++) {
+    if (s[i] === '(') depth++;
+    else if (s[i] === ')') { depth--; if (depth === 0) return i === s.length - 1; }
+  }
+  return false;
+}
+
 /* ── Symbol bar insertion ──────────────────────────────────────── */
 // For Formulas card: inserts into whichever .formula-input has focus
 var _lastFormulaInput = null;
@@ -164,7 +184,11 @@ function onSlotInput(inp) {
     return;
   }
   try {
-    slot.ast = parseFormula(raw);
+    var ast = parseFormula(raw);
+    if (!isOfficialFormula(raw, ast)) {
+      throw new ParseError('Not an official formula — binary connectives must be enclosed in parentheses, e.g. (p ∧ q).');
+    }
+    slot.ast = ast;
     slot.err = null;
     inp.classList.add('valid'); inp.classList.remove('invalid');
     if (tick) tick.style.display = '';
@@ -373,7 +397,11 @@ function onBuildInput() {
     return;
   }
   try {
-    _buildAST = parseFormula(raw);
+    var ast = parseFormula(raw);
+    if (!isOfficialFormula(raw, ast)) {
+      throw new ParseError('Not an official formula — binary connectives must be enclosed in parentheses, e.g. (p ∧ q).');
+    }
+    _buildAST = ast;
     inp.classList.add('valid'); inp.classList.remove('invalid');
     tick.style.display = '';
     status.innerHTML = astToLabel(_buildAST) + ' &nbsp;—&nbsp; fill in every cell (T / F). Sentence-letter columns are pre-filled.';
