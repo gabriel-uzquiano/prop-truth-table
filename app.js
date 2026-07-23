@@ -699,7 +699,14 @@ function loadHash() {
 //               build-input row, examples, and buttons; formula comes from hash
 // Auto-fill all build cells with correct answers (used by ?card=table&solved=1)
 function solveAll() {
-  if (!_buildTable || !_buildCells.length) return;
+  // Retry until _buildTable and DOM cells are ready
+  if (!_buildTable || !_buildCells.length) {
+    setTimeout(solveAll, 50);
+    return;
+  }
+  var firstEl = document.getElementById(_buildCells[0].id);
+  if (!firstEl) { setTimeout(solveAll, 50); return; }
+
   var rows = _buildTable.rows;
   _buildCells.forEach(function (cell) {
     var el = document.getElementById(cell.id);
@@ -711,11 +718,12 @@ function solveAll() {
     el.classList.add('filled', 'tv-' + val, 'correct');
     el.classList.remove('wrong');
     el.style.pointerEvents = 'none';  // read-only
+    el.onclick = null;  // disable cycling
   });
   var verd = document.getElementById('build-verdict');
-  if (verd) verd.style.display = 'none';  // no verdict needed
+  if (verd) verd.style.display = 'none';
   var btnRow = document.getElementById('build-btn-row');
-  if (btnRow) btnRow.hidden = true;  // hide Reset/Check buttons
+  if (btnRow) btnRow.hidden = true;
 }
 
 function applyCardMode() {
@@ -746,7 +754,7 @@ function applyCardMode() {
     if (buildStatus) buildStatus.hidden = true;
     var buildExamples = document.querySelector('#build-section .formula-examples');
     if (buildExamples) buildExamples.hidden = true;
-    // Auto-fill if ?solved=1
-    if (solved) solveAll();
+    // Auto-fill if ?solved=1 — use retry loop in case table isn't ready yet
+    if (solved) setTimeout(solveAll, 0);
   }
 }
