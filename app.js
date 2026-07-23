@@ -1035,7 +1035,9 @@ function generateCombinedBuildTable() {
   if (validSlots.length === 0) return;
 
   _combinedFormulas   = validSlots.map(function (s) {
-    return { ast: s.ast, label: astToLabel(s.ast) };
+    // Use official form (prettyPrint with topLevel=false adds outer parens
+    // for binary connectives; letters and negations are unaffected)
+    return { ast: s.ast, label: prettyPrint(s.ast, false) };
   });
   _combinedLetters    = collectLetters(_combinedFormulas.map(function (f) { return f.ast; }));
   _combinedAssignments = generateAssignments(_combinedLetters);
