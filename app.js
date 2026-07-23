@@ -266,7 +266,7 @@ function getSubformulaCols(ast) {
     if (node.left)  walk(node.left);
     if (node.right) walk(node.right);
     if (node.arg) walk(node.arg);
-    var lbl = astToLabel(node);
+    var lbl = prettyPrint(node, false);
     if (!seen[lbl]) {
       seen[lbl] = true;
       cols.push({ label: lbl, ast: node, isMain: false });
@@ -274,7 +274,7 @@ function getSubformulaCols(ast) {
   }
   walk(ast);
   if (cols.length > 0) cols[cols.length - 1].isMain = true;
-  else cols.push({ label: astToLabel(ast), ast: ast, isMain: true }); // atom-only formula
+  else cols.push({ label: prettyPrint(ast, false), ast: ast, isMain: true }); // atom-only formula
   return cols;
 }
 
