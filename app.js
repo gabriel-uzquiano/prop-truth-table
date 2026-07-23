@@ -786,3 +786,224 @@ function applyCardMode() {
     if (solved) setTimeout(solveAll, 0);
   }
 }
+
+/* ================================================================
+   CHECK MODES: tautology | equivalence | validity
+   Activated via ?mode=tautology|equivalence|validity in the URL.
+   ================================================================ */
+
+var _checkMode = null; // null | 'tautology' | 'equivalence' | 'validity'
+
+function applyCheckMode() {
+  var sp = new URLSearchParams(window.location.search);
+  var mode = sp.get('mode');
+  if (!mode) return;
+  _checkMode = mode;
+
+  // Always hide header, help in embedded mode
+  var header = document.querySelector('.app-header');
+  if (header) header.hidden = true;
+  var help = document.getElementById('help-panel');
+  if (help) help.hidden = true;
+
+  // Hide Formulas and Build cards — formula(s) come from hash
+  var fSec = document.getElementById('formula-section');
+  if (fSec) fSec.hidden = true;
+  var bSec = document.getElementById('build-section');
+  if (bSec) bSec.hidden = true;
+
+  // Update Check card hint and button label
+  var hint = document.querySelector('#check-section .card-hint');
+  var btn  = document.getElementById('check-run-btn');
+
+  if (mode === 'tautology') {
+    if (hint) hint.innerHTML =
+      'Populate the truth table, then click <em>Evaluate</em> to check whether the formula is a <strong>tautology</strong>. ' +
+      'If it is not, a counterexample row will be highlighted.';
+    if (btn) btn.textContent = 'Evaluate';
+  } else if (mode === 'equivalence') {
+    if (hint) hint.innerHTML =
+      'Populate the truth table, then click <em>Evaluate</em> to check whether the two formulas are <strong>logically equivalent</strong>. ' +
+      'If they are not, a row where they differ will be highlighted.';
+    if (btn) btn.textContent = 'Evaluate';
+  } else if (mode === 'validity') {
+    if (hint) hint.innerHTML =
+      'Populate the truth table, then click <em>Evaluate</em> to check whether the argument is <strong>valid</strong>. ' +
+      'Premises are shown first; the conclusion is the last formula. ' +
+      'If the argument is invalid, a counterexample row (premises all true, conclusion false) will be highlighted.';
+    if (btn) btn.textContent = 'Evaluate';
+  }
+
+  // Override runCheck to dispatch to the right mode handler
+  (function () {
+    var origRunCheck = runCheck;
+    window.runCheck = function () {
+      if (_checkMode === 'tautology')  return runTautologyCheck();
+      if (_checkMode === 'equivalence') return runEquivalenceCheck();
+      if (_checkMode === 'validity')   return runValidityCheck();
+      return origRunCheck();
+    };
+  })();
+}
+
+/* ── shared helpers for mode checks ──────────────────────── */
+function _modeSetup() {
+  var validSlots = _formulaSlots.filter(function (s) { return s.ast !== null; });
+  var wrap  = document.getElementById('check-table-wrap');
+  var verd  = document.getElementById('check-verdict');
+  wrap.style.display = 'none';
+  verd.style.display = 'none';
+  return { validSlots: validSlots, wrap: wrap, verd: verd };
+}
+
+function _modeWarn(verd, msg) {
+  verd.innerHTML = '<div class="verdict verdict-warn"><span class="verdict-icon">⚠</span><span>' + msg + '</span></div>';
+  verd.style.display = '';
+}
+
+function _renderModeTable(letters, formulaBlocks, assignments, highlightFn) {
+  var html = '<div class="tt-scroll"><table class="truth-table"><thead><tr>';
+  letters.forEach(function (l, i) {
+    var sep = (i === letters.length - 1) ? ' col-sep' : '';
+    html += '<th class="' + sep + '">' + l + '</th>';
+  });
+  formulaBlocks.forEach(function (fb, bi) {
+    fb.cols.forEach(function (col) {
+      var cls = col.isMain ? 'col-main' : '';
+      if (bi < formulaBlocks.length - 1 && col.isMain) cls += ' col-sep';
+      html += '<th class="' + cls.trim() + '">' + col.label + '</th>';
+    });
+  });
+  html += '</tr></thead><tbody>';
+  assignments.forEach(function (asgn, ri) {
+    var hl = highlightFn(ri, asgn) || '';
+    html += '<tr' + (hl ? ' class="' + hl + '"' : '') + '>';
+    letters.forEach(function (l, i) {
+      var sep = (i === letters.length - 1) ? ' col-sep' : '';
+      html += '<td class="' + sep + '">' + tvSpan(asgn[l]) + '</td>';
+    });
+    formulaBlocks.forEach(function (fb, bi) {
+      fb.cols.forEach(function (col) {
+        var cls = col.isMain ? 'col-main' : '';
+        if (bi < formulaBlocks.length - 1 && col.isMain) cls += ' col-sep';
+        html += '<td class="' + cls.trim() + '">' + tvSpan(evaluate(col.ast, asgn)) + '</td>';
+      });
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+/* ── Tautology check ─────────────────────────────────────── */
+function runTautologyCheck() {
+  var d = _modeSetup();
+  if (d.validSlots.length === 0) { _modeWarn(d.verd, 'No formula loaded.'); return; }
+  if (d.validSlots.length > 1)   { _modeWarn(d.verd, 'Tautology check expects exactly one formula.'); return; }
+
+  var ast     = d.validSlots[0].ast;
+  var letters = collectLetters([ast]);
+  var assignments = generateAssignments(letters);
+  var fb = { ast: ast, cols: buildColumns(ast, letters), label: astToLabel(ast) };
+
+  // Find counterexample rows (main connective = F)
+  var counterRows = {};
+  assignments.forEach(function (asgn, ri) {
+    var mainAst = fb.cols[fb.cols.length - 1].ast;
+    if (!evaluate(mainAst, asgn)) counterRows[ri] = true;
+  });
+
+  d.wrap.innerHTML = _renderModeTable(letters, [fb], assignments, function (ri) {
+    return counterRows[ri] ? 'row-counterex' : null;
+  });
+  d.wrap.style.display = '';
+
+  if (Object.keys(counterRows).length === 0) {
+    d.verd.innerHTML = '<div class="verdict verdict-ok"><span class="verdict-icon">✓</span>'
+      + '<span><strong>Tautology</strong> — the formula is true on every row.</span></div>';
+  } else {
+    d.verd.innerHTML = '<div class="verdict verdict-fail"><span class="verdict-icon">✗</span>'
+      + '<span><strong>Not a tautology</strong> — highlighted row(s) are counterexamples where the formula is false.</span></div>';
+  }
+  d.verd.style.display = '';
+}
+
+/* ── Equivalence check ───────────────────────────────────── */
+function runEquivalenceCheck() {
+  var d = _modeSetup();
+  if (d.validSlots.length < 2) { _modeWarn(d.verd, 'Equivalence check requires exactly two formulas.'); return; }
+  if (d.validSlots.length > 2) { _modeWarn(d.verd, 'Equivalence check expects exactly two formulas.'); return; }
+
+  var asts    = d.validSlots.map(function (s) { return s.ast; });
+  var letters = collectLetters(asts);
+  var assignments = generateAssignments(letters);
+  var fbs = asts.map(function (ast) {
+    return { ast: ast, cols: buildColumns(ast, letters), label: astToLabel(ast) };
+  });
+
+  // Counterexample: rows where main connectives differ
+  var counterRows = {};
+  assignments.forEach(function (asgn, ri) {
+    var vals = fbs.map(function (fb) {
+      return evaluate(fb.cols[fb.cols.length - 1].ast, asgn);
+    });
+    if (vals[0] !== vals[1]) counterRows[ri] = true;
+  });
+
+  d.wrap.innerHTML = _renderModeTable(letters, fbs, assignments, function (ri) {
+    return counterRows[ri] ? 'row-counterex' : null;
+  });
+  d.wrap.style.display = '';
+
+  if (Object.keys(counterRows).length === 0) {
+    d.verd.innerHTML = '<div class="verdict verdict-ok"><span class="verdict-icon">✓</span>'
+      + '<span><strong>Equivalent</strong> — the formulas have the same truth value on every row.</span></div>';
+  } else {
+    d.verd.innerHTML = '<div class="verdict verdict-fail"><span class="verdict-icon">✗</span>'
+      + '<span><strong>Not equivalent</strong> — highlighted row(s) show where the truth values differ.</span></div>';
+  }
+  d.verd.style.display = '';
+}
+
+/* ── Validity check ──────────────────────────────────────── */
+function runValidityCheck() {
+  var d = _modeSetup();
+  if (d.validSlots.length < 2) { _modeWarn(d.verd, 'Validity check requires at least one premise and a conclusion (two or more formulas).'); return; }
+
+  var asts      = d.validSlots.map(function (s) { return s.ast; });
+  var premiseAsts   = asts.slice(0, -1);
+  var conclusionAst = asts[asts.length - 1];
+  var letters   = collectLetters(asts);
+  var assignments = generateAssignments(letters);
+
+  var fbs = asts.map(function (ast, i) {
+    return { ast: ast, cols: buildColumns(ast, letters), label: astToLabel(ast) };
+  });
+
+  // Counterexample: all premises true AND conclusion false
+  var counterRows = {};
+  assignments.forEach(function (asgn, ri) {
+    var premisesTrue = premiseAsts.every(function (pa, i) {
+      return evaluate(fbs[i].cols[fbs[i].cols.length - 1].ast, asgn);
+    });
+    var conclusionFalse = !evaluate(fbs[fbs.length - 1].cols[fbs[fbs.length - 1].cols.length - 1].ast, asgn);
+    if (premisesTrue && conclusionFalse) counterRows[ri] = true;
+  });
+
+  d.wrap.innerHTML = _renderModeTable(letters, fbs, assignments, function (ri) {
+    return counterRows[ri] ? 'row-counterex' : null;
+  });
+  d.wrap.style.display = '';
+
+  if (Object.keys(counterRows).length === 0) {
+    d.verd.innerHTML = '<div class="verdict verdict-ok"><span class="verdict-icon">✓</span>'
+      + '<span><strong>Valid</strong> — no row makes all premises true and the conclusion false.</span></div>';
+  } else {
+    d.verd.innerHTML = '<div class="verdict verdict-fail"><span class="verdict-icon">✗</span>'
+      + '<span><strong>Invalid</strong> — highlighted row(s) are counterexamples where premises are true and conclusion is false.</span></div>';
+  }
+  d.verd.style.display = '';
+}
+
+// Run on load — after loadHash (0ms) and applyCardMode (100ms)
+setTimeout(applyCheckMode, 150);
