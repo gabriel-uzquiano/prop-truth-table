@@ -806,11 +806,8 @@ function applyCheckMode() {
   var help = document.getElementById('help-panel');
   if (help) help.hidden = true;
 
-  // Hide Formulas and Build cards — formula(s) come from hash
-  var fSec = document.getElementById('formula-section');
-  if (fSec) fSec.hidden = true;
-  var bSec = document.getElementById('build-section');
-  if (bSec) bSec.hidden = true;
+  // Keep Formulas and Build cards visible so students can work through the table.
+  // Only hide the header (already done above).
 
   // Update Check card hint and button label
   var hint = document.querySelector('#check-section .card-hint');
